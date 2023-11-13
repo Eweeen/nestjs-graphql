@@ -10,7 +10,7 @@ import {
 import { Vehicle } from './entities/vehicle.entity';
 import { VehiclesService } from './vehicles.service';
 import { Park } from '../parks/entities/park.entity';
-import { UpdateVehicle } from './inputs/updateVehicle.input';
+import { VehicleInput } from './inputs/vehicle.input';
 import { IVehicle } from './vehicles.interface';
 
 @Resolver(() => Vehicle)
@@ -28,9 +28,16 @@ export class VehiclesResolver {
   }
 
   @Mutation(() => Vehicle)
+  async createVehicle(
+    @Args('createVehicleData') createVehicle: VehicleInput,
+  ): Promise<Vehicle> {
+    return await this.vehiclesService.create(createVehicle);
+  }
+
+  @Mutation(() => Vehicle)
   async updateVehicle(
     @Args('id', { type: () => Int }) id: number,
-    @Args('updateVehicleData') updateVehicle: UpdateVehicle,
+    @Args('updateVehicleData') updateVehicle: VehicleInput,
   ): Promise<Vehicle> {
     return await this.vehiclesService.update(id, updateVehicle);
   }

@@ -46,18 +46,19 @@ type Query {
 }
 
 type Mutation {
-  updateVehicle(id: Int!, updateVehicleData: UpdateVehicle!): Vehicle!
-  createBrand(createBrandData: CreateBrand!): Brand!
-  updateBrand(id: Int!, updateBrandData: CreateBrand!): Brand!
+  createVehicle(createVehicleData: VehicleInput!): Vehicle!
+  updateVehicle(id: Int!, updateVehicleData: VehicleInput!): Vehicle!
+  createBrand(createBrandData: BrandInput!): Brand!
+  updateBrand(id: Int!, updateBrandData: BrandInput!): Brand!
 }
 
-input UpdateVehicle {
+input VehicleInput {
   immatriculation: String
   model: String
   parkId: ID
 }
 
-input CreateBrand {
+input BrandInput {
   name: String!
 }
 

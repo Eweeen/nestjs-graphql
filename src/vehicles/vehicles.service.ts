@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 import { Vehicle } from './entities/vehicle.entity';
 import { Park } from '../parks/entities/park.entity';
-import { UpdateVehicle } from './inputs/updateVehicle.input';
+import { VehicleInput } from './inputs/vehicle.input';
 
 @Injectable()
 export class VehiclesService {
@@ -22,7 +22,15 @@ export class VehiclesService {
     });
   }
 
-  async update(id: number, updateVehicle: UpdateVehicle): Promise<Vehicle> {
+  async create(createVehicle: VehicleInput): Promise<Vehicle> {
+    return await this.vehiclesRepository().save({
+      immatriculation: createVehicle.immatriculation,
+      model: createVehicle.model,
+      park: { id: createVehicle.parkId },
+    });
+  }
+
+  async update(id: number, updateVehicle: VehicleInput): Promise<Vehicle> {
     const vehicle: Vehicle = await this.findOne(id);
     if (!vehicle) throw new Error(`Vehicle ${id} not found`);
 

@@ -11,7 +11,7 @@ import {
 import { Brand } from './entities/brand.entity';
 import { BrandsService } from './brands.service';
 import { Park } from '../parks/entities/park.entity';
-import { CreateBrand } from './inputs/create-brand.input';
+import { BrandInput } from './inputs/brand.input';
 import { PubSub } from 'graphql-subscriptions';
 
 const pubSub: PubSub = new PubSub();
@@ -32,7 +32,7 @@ export class BrandsResolver {
 
   @Mutation(() => Brand)
   async createBrand(
-    @Args('createBrandData') createBrand: CreateBrand,
+    @Args('createBrandData') createBrand: BrandInput,
   ): Promise<Brand> {
     const createdBrand: Brand = await this.brandsService.create(createBrand);
     await pubSub.publish('brandChange', { brandChange: createdBrand });
@@ -42,7 +42,7 @@ export class BrandsResolver {
   @Mutation(() => Brand)
   async updateBrand(
     @Args('id', { type: () => Int }) id: number,
-    @Args('updateBrandData') updateBrand: CreateBrand,
+    @Args('updateBrandData') updateBrand: BrandInput,
   ): Promise<Brand> {
     const updatedBrand: Brand = await this.brandsService.update(
       id,
