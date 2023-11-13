@@ -1,0 +1,67 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+interface IVehicle {
+  id: Int!
+  immatriculation: String!
+  model: String!
+  park: Park!
+}
+
+type Brand {
+  id: ID!
+  name: String!
+  parks: [Park!]
+}
+
+type Park {
+  id: ID!
+  name: String!
+  vehicles: [Vehicle!]
+  brand: Brand
+}
+
+type Vehicle {
+  id: ID!
+  immatriculation: String!
+  model: String!
+  park: Park
+}
+
+type Cars implements IVehicle {
+  id: Int!
+  immatriculation: String!
+  model: String!
+  park: Park!
+  color: String!
+}
+
+type Query {
+  vehicles: [Vehicle!]!
+  vehicle(id: Int!): IVehicle!
+  parks: [Park!]!
+  brands: [Brand!]!
+  brand(id: Int!): Brand!
+}
+
+type Mutation {
+  updateVehicle(id: Int!, updateVehicleData: UpdateVehicle!): Vehicle!
+  createBrand(createBrandData: CreateBrand!): Brand!
+  updateBrand(id: Int!, updateBrandData: CreateBrand!): Brand!
+}
+
+input UpdateVehicle {
+  immatriculation: String
+  model: String
+  parkId: ID
+}
+
+input CreateBrand {
+  name: String!
+}
+
+type Subscription {
+  brandChange: [Brand!]!
+  brandChangeById(id: Int!): Brand!
+}

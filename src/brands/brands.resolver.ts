@@ -1,0 +1,82 @@
+import {
+  Args,
+  Int,
+  Mutation,
+  Parent,
+  Query,
+  ResolveField,
+  Resolver,
+  Subscription,
+} from '@nestjs/graphql';
+import { Brand } from './entities/brand.entity';
+import { BrandsService } from './brands.service';
+import { Park } from '../parks/entities/park.entity';
+import { CreateBrand } from './inputs/create-brand.input';
+import { PubSub } from 'graphql-subscriptions';
+
+const pubSub: PubSub = new PubSub();
+
+@Resolver(() => Brand)
+export class BrandsResolver {
+  constructor(private readonly brandsService: BrandsService) {}
+
+  @Query(() => [Brand])
+  async brands(): Promise<Brand[]> {
+    return await this.brandsService.findAll();
+  }
+
+  @Query(() => Brand)
+  async brand(@Args('id', { type: () => Int }) id: number): Promise<Brand> {
+    return await this.brandsService.findOne(id);
+  }
+
+  @Mutation(() => Brand)
+  async createBrand(
+    @Args('createBrandData') createBrand: CreateBrand,
+  ): Promise<Brand> {
+    const createdBrand: Brand = await this.brandsService.create(createBrand);
+    await pubSub.publish('brandChange', { brandChange: createdBrand });
+    return createdBrand;
+  }
+
+  @Mutation(() => Brand)
+  async updateBrand(
+    @Args('id', { type: () => Int }) id: number,
+    @Args('updateBrandData') updateBrand: CreateBrand,
+  ): Promise<Brand> {
+    const updatedBrand: Brand = await this.brandsService.update(
+      id,
+      updateBrand,
+    );
+    await pubSub.publish('brandChangeById', { brandChangeById: updatedBrand });
+    return updatedBrand;
+  }
+
+  @Subscription(() => [Brand], {
+    name: 'brandChange',
+    async resolve(this: BrandsResolver): Promise<Brand[]> {
+      return await this.brandsService.findAll();
+    },
+  })
+  subscriptionToBrandChange(): AsyncIterator<unknown, any, undefined> {
+    return pubSub.asyncIterator('brandChange');
+  }
+
+  @Subscription(() => Brand, {
+    name: 'brandChangeById',
+    filter: (payload, variables): boolean =>
+      payload.brandChangeById.id === variables.id,
+  })
+  subscriptionToBrandChangeById(
+    @Args('id', { type: () => Int }) id: number,
+  ): AsyncIterator<unknown, any, undefined> {
+    return pubSub.asyncIterator('brandChangeById');
+  }
+
+  @ResolveField(() => [Park])
+  async parks(@Parent() brand: Brand): Promise<Park[]> {
+    return brand.parks
+      ? brand.parks
+      : await this.brandsService.loadParks(brand.id);
+  }
+}
