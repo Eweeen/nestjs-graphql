@@ -6,12 +6,16 @@ import {
   Query,
   ResolveField,
   Resolver,
+  Subscription,
 } from '@nestjs/graphql';
 import { Vehicle } from './entities/vehicle.entity';
 import { VehiclesService } from './vehicles.service';
 import { Park } from '../parks/entities/park.entity';
 import { VehicleInput } from './inputs/vehicle.input';
 import { IVehicle } from './vehicles.interface';
+import { PubSub } from 'graphql-subscriptions';
+
+const pubSub: PubSub = new PubSub();
 
 @Resolver(() => Vehicle)
 export class VehiclesResolver {
@@ -40,6 +44,16 @@ export class VehiclesResolver {
     @Args('updateVehicleData') updateVehicle: VehicleInput,
   ): Promise<Vehicle> {
     return await this.vehiclesService.update(id, updateVehicle);
+  }
+
+  @Subscription(() => [Vehicle], {
+    name: 'vehicleChange',
+    async resolve(this: VehiclesResolver): Promise<Vehicle[]> {
+      return await this.vehiclesService.findAll();
+    },
+  })
+  vehicleChange(): AsyncIterator<unknown, any, undefined> {
+    return pubSub.asyncIterator('vehicleChange');
   }
 
   @ResolveField(() => Park)
