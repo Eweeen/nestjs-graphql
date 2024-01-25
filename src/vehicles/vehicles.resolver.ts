@@ -58,13 +58,43 @@ export class VehiclesResolver {
     @Args('id', { type: () => Int }) id: number,
     @Args('updateVehicleData') updateVehicle: VehicleInput,
   ): Promise<Vehicle> {
-    return await this.vehiclesService.update(id, updateVehicle);
+    const updatedVehicle = await this.vehiclesService.update(id, updateVehicle);
+
+    await this.pubSub.publish('vehicleChange', {
+      vehicleChange: updatedVehicle,
+    });
+    if (updatedVehicle.park) {
+      await this.pubSub.publish('parkChange', {
+        parkChange: updatedVehicle.park,
+      });
+    }
+
+    return updatedVehicle;
   }
 
-  @Subscription(() => [Vehicle], {
+  // Suppression
+  @Mutation(() => Vehicle)
+  async deleteVehicle(
+      @Args('id', { type: () => Int }) id: number,
+  ): Promise<Vehicle> {
+      const deletedVehicle: Vehicle = await this.vehiclesService.delete(id);
+
+      await this.pubSub.publish('vehicleChange', {
+          vehicleChange: deletedVehicle,
+      });
+      if (deletedVehicle.park) {
+          await this.pubSub.publish('parkChange', {
+              parkChange: deletedVehicle.park,
+          });
+      }
+
+      return deletedVehicle;
+  }
+
+  @Subscription(() => Vehicle, {
     name: 'vehicleChange',
-    async resolve(this: VehiclesResolver): Promise<Vehicle[]> {
-      return await this.vehiclesService.findAll();
+    async resolve(this: VehiclesResolver, data): Promise<Vehicle> {
+      return await this.vehiclesService.findOne(data.vehicleChange.id);
     },
   })
   vehicleChange(): AsyncIterator<unknown, any, undefined> {

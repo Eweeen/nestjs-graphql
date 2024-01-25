@@ -48,6 +48,7 @@ type Query {
 type Mutation {
   createVehicle(createVehicleData: VehicleInput!): Vehicle!
   updateVehicle(id: Int!, updateVehicleData: VehicleInput!): Vehicle!
+  deleteVehicle(id: Int!): Vehicle!
   createBrand(createBrandData: BrandInput!): Brand!
   updateBrand(id: Int!, updateBrandData: BrandInput!): Brand!
 }
@@ -63,7 +64,7 @@ input BrandInput {
 }
 
 type Subscription {
-  vehicleChange: [Vehicle!]!
+  vehicleChange: Vehicle!
   parkChange(id: Int!): Park!
   brandChange: [Brand!]!
   brandChangeById(id: Int!): Brand!

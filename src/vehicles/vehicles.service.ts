@@ -44,6 +44,12 @@ export class VehiclesService {
     });
   }
 
+  async delete(id: number): Promise<Vehicle> {
+    const vehicle: Vehicle = await this.findOne(id);
+    await this.vehiclesRepository().delete(id);
+    return vehicle;
+  }
+
   async loadPark(vehicleId: number): Promise<Park | null> {
     const vehicle: Vehicle = await this.vehiclesRepository().findOne({
       where: { id: vehicleId },
