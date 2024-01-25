@@ -13,13 +13,15 @@ import { VehiclesService } from './vehicles.service';
 import { Park } from '../parks/entities/park.entity';
 import { VehicleInput } from './inputs/vehicle.input';
 import { IVehicle } from './vehicles.interface';
+import { Inject } from '@nestjs/common';
 import { PubSub } from 'graphql-subscriptions';
-
-const pubSub: PubSub = new PubSub();
 
 @Resolver(() => Vehicle)
 export class VehiclesResolver {
-  constructor(private readonly vehiclesService: VehiclesService) {}
+  constructor(
+    private readonly vehiclesService: VehiclesService,
+    @Inject('PUB_SUB') private readonly pubSub: PubSub,
+  ) {}
 
   @Query(() => [Vehicle])
   async vehicles(): Promise<Vehicle[]> {
@@ -35,7 +37,20 @@ export class VehiclesResolver {
   async createVehicle(
     @Args('createVehicleData') createVehicle: VehicleInput,
   ): Promise<Vehicle> {
-    return await this.vehiclesService.create(createVehicle);
+    const createdVehicle: Vehicle = await this.vehiclesService.create(
+      createVehicle,
+    );
+
+    await this.pubSub.publish('vehicleChange', {
+      vehicleChange: createdVehicle,
+    });
+    if (createdVehicle.park) {
+      await this.pubSub.publish('parkChange', {
+        parkChange: createdVehicle.park,
+      });
+    }
+
+    return createdVehicle;
   }
 
   @Mutation(() => Vehicle)
@@ -53,7 +68,7 @@ export class VehiclesResolver {
     },
   })
   vehicleChange(): AsyncIterator<unknown, any, undefined> {
-    return pubSub.asyncIterator('vehicleChange');
+    return this.pubSub.asyncIterator('vehicleChange');
   }
 
   @ResolveField(() => Park)

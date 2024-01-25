@@ -12,6 +12,13 @@ export class ParksService {
     return this.dataSource.getRepository(Park);
   }
 
+  async findOne(id: number, relations?: string[]): Promise<Park> {
+    return await this.parksRepository().findOne({
+      where: { id },
+      relations: ['vehicles'],
+    });
+  }
+
   async findAll(): Promise<Park[]> {
     return await this.parksRepository().find();
   }

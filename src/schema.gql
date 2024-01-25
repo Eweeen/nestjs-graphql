@@ -64,6 +64,7 @@ input BrandInput {
 
 type Subscription {
   vehicleChange: [Vehicle!]!
+  parkChange(id: Int!): Park!
   brandChange: [Brand!]!
   brandChangeById(id: Int!): Brand!
 }

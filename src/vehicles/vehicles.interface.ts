@@ -1,6 +1,5 @@
 import { Field, Int, InterfaceType, ObjectType } from '@nestjs/graphql';
 import { Park } from '../parks/entities/park.entity';
-import { Vehicle } from './entities/vehicle.entity';
 
 @InterfaceType()
 export abstract class IVehicle {

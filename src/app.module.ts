@@ -11,6 +11,7 @@ import { ConfigModule } from '@nestjs/config';
 import { ParksModule } from './parks/parks.module';
 import { ParksService } from './parks/parks.service';
 import { BrandsModule } from './brands/brands.module';
+import { SharedModule } from './shared.module';
 
 @Module({
   imports: [
@@ -31,8 +32,8 @@ import { BrandsModule } from './brands/brands.module';
     ParksModule,
     BrandsModule,
   ],
-  providers: [AppService, VehiclesService, ParksService],
-  exports: [VehiclesService, ParksService],
+  providers: [AppService, VehiclesService, ParksService, SharedModule],
+  exports: [VehiclesService, ParksService, SharedModule],
   controllers: [AppController],
 })
 export class AppModule {}

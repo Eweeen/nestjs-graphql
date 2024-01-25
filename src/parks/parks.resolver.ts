@@ -1,16 +1,44 @@
-import { Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
+import {
+  Args,
+  Int,
+  Parent,
+  Query,
+  ResolveField,
+  Resolver,
+  Subscription,
+} from '@nestjs/graphql';
 import { ParksService } from './parks.service';
 import { Park } from './entities/park.entity';
 import { Vehicle } from '../vehicles/entities/vehicle.entity';
 import { Brand } from '../brands/entities/brand.entity';
+import { PubSub } from 'graphql-subscriptions';
+import { Inject } from '@nestjs/common';
 
 @Resolver(() => Park)
 export class ParksResolver {
-  constructor(private readonly parksService: ParksService) {}
+  constructor(
+    private readonly parksService: ParksService,
+    @Inject('PUB_SUB') private readonly pubSub: PubSub,
+  ) {}
 
-  @Query((returns) => [Park])
+  @Query(() => [Park])
   async parks(): Promise<Park[]> {
     return await this.parksService.findAll();
+  }
+
+  @Subscription(() => Park, {
+    name: 'parkChange',
+    filter: (payload, variables): boolean => {
+      return +payload.parkChange.id === +variables.id;
+    },
+    async resolve(this: ParksResolver, value: any): Promise<Park> {
+      return await this.parksService.findOne(value.parkChange.id, ['vehicles']);
+    },
+  })
+  parkChange(
+    @Args('id', { type: () => Int }) id: number,
+  ): AsyncIterator<unknown, any, undefined> {
+    return this.pubSub.asyncIterator('parkChange');
   }
 
   @ResolveField(() => [Vehicle])

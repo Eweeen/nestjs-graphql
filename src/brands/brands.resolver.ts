@@ -13,12 +13,14 @@ import { BrandsService } from './brands.service';
 import { Park } from '../parks/entities/park.entity';
 import { BrandInput } from './inputs/brand.input';
 import { PubSub } from 'graphql-subscriptions';
-
-const pubSub: PubSub = new PubSub();
+import { Inject } from '@nestjs/common';
 
 @Resolver(() => Brand)
 export class BrandsResolver {
-  constructor(private readonly brandsService: BrandsService) {}
+  constructor(
+    private readonly brandsService: BrandsService,
+    @Inject('PUB_SUB') private readonly pubSub: PubSub,
+  ) {}
 
   @Query(() => [Brand])
   async brands(): Promise<Brand[]> {
@@ -35,7 +37,7 @@ export class BrandsResolver {
     @Args('createBrandData') createBrand: BrandInput,
   ): Promise<Brand> {
     const createdBrand: Brand = await this.brandsService.create(createBrand);
-    await pubSub.publish('brandChange', { brandChange: createdBrand });
+    await this.pubSub.publish('brandChange', { brandChange: createdBrand });
     return createdBrand;
   }
 
@@ -48,7 +50,9 @@ export class BrandsResolver {
       id,
       updateBrand,
     );
-    await pubSub.publish('brandChangeById', { brandChangeById: updatedBrand });
+    await this.pubSub.publish('brandChangeById', {
+      brandChangeById: updatedBrand,
+    });
     return updatedBrand;
   }
 
@@ -59,18 +63,18 @@ export class BrandsResolver {
     },
   })
   subscriptionToBrandChange(): AsyncIterator<unknown, any, undefined> {
-    return pubSub.asyncIterator('brandChange');
+    return this.pubSub.asyncIterator('brandChange');
   }
 
   @Subscription(() => Brand, {
     name: 'brandChangeById',
     filter: (payload, variables): boolean =>
-      payload.brandChangeById.id === variables.id,
+      +payload.brandChangeById.id === +variables.id,
   })
   subscriptionToBrandChangeById(
     @Args('id', { type: () => Int }) id: number,
   ): AsyncIterator<unknown, any, undefined> {
-    return pubSub.asyncIterator('brandChangeById');
+    return this.pubSub.asyncIterator('brandChangeById');
   }
 
   @ResolveField(() => [Park])
